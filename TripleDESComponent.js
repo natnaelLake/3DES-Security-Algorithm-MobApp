@@ -13,7 +13,6 @@ const TripleDES = () => {
   });
 
   const handleSubmit = () => {
-    console.log("==============================");
     if (plainText === "") {
       setErrorMessage((prevState) => ({
         ...prevState,
@@ -37,7 +36,6 @@ const TripleDES = () => {
         keyInputError: "",
       }));
     }
-    console.log("-------------------------", errorMessage);
   };
   const hasErrors = () => {
     return errorMessage.keyInputError || errorMessage.plainTextError;

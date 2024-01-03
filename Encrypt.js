@@ -24,59 +24,67 @@ const Encrypt = () => {
   const [errorMessage, setErrorMessage] = useState({
     plainTextError: "",
     keyInputError: "",
+    error: "",
   });
-  const [visible, setVisible] = React.useState(false);
-  const [showDecrypt, setShowDecrypt] = React.useState(false);
+  const [inputError, setInputError] = useState({
+    plainTextError: "",
+    keyInputError: "",
+  });
+  const [visible, setVisible] = useState(false);
+  const [showDecrypt, setShowDecrypt] = useState(false);
   const hideDialog = () => {
     setVisible(false);
-    setShowDecrypt(false)
+    setShowDecrypt(false);
   };
 
   const showDialog = () => {
     setVisible(true);
   };
 
-  const hasErrors = () => {
-    return errorMessage.keyInputError || errorMessage.plainTextError;
+  const hasInputErrors = () => {
+    return inputError.keyInputError || inputError.plainTextError;
   };
-
+  const hasServerErrors = () => {
+    return (
+      errorMessage.keyInputError ||
+      errorMessage.plainTextError ||
+      errorMessage.error
+    );
+  };
   const handleSubmit = () => {
-    console.log("==============================");
     if (plainText === "") {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         plainTextError: "Please Write Your Message",
       }));
     } else {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         plainTextError: "",
       }));
     }
-
     if (keyInput === "") {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         keyInputError: "Please Add Your Encryption Key",
       }));
     } else {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         keyInputError: "",
       }));
     }
     startEncryption();
-    console.log("-------------------------", errorMessage);
   };
   const startEncryption = async () => {
-    if (!hasErrors()) {
+    if (!hasInputErrors()) {
       const response = await start(
         plainText,
         keyInput,
         plainTextCheck,
         keyCheck
       );
-      if (!response.error) {
+      if (Object.keys(response).length === 2) {
         setDesResult((prevState) => ({
           ...prevState,
           cipherText: response.encryptedCipherText,
@@ -85,6 +93,40 @@ const Encrypt = () => {
           ...prevState,
           plainText: response.decryptedCipherText,
         }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          plainTextError: "",
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          keyInputError: "",
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          error: "",
+        }));
+      } else if (Object.keys(response).length === 1) {
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          plainTextError: response.error.textError,
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          keyInputError: response.error.keyError,
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          error: response.error.error,
+        }));
+        // setDesResult((prevState) => ({
+        //   ...prevState,
+        //   cipherText: '',
+        // }));
+        // setDesResult((prevState) => ({
+        //   ...prevState,
+        //   plainText: '',
+        // }));
+      } else {
       }
     }
   };
@@ -93,6 +135,11 @@ const Encrypt = () => {
       <ScrollView style={styles.containerStyle}>
         <View>
           <View>
+            <View>
+            <HelperText type="error" visible={hasServerErrors()}>
+                {errorMessage.error}
+              </HelperText>
+            </View>
             <View>
               <TextInput
                 label={"Message Input"}
@@ -116,9 +163,13 @@ const Encrypt = () => {
                   },
                 }}
               />
-              <HelperText type="error" visible={hasErrors()}>
+              <HelperText type="error" visible={hasInputErrors()}>
+                {inputError.plainTextError}
+              </HelperText>
+              <HelperText type="error" visible={hasServerErrors()}>
                 {errorMessage.plainTextError}
               </HelperText>
+              
             </View>
             <View>
               <Text
@@ -186,7 +237,10 @@ const Encrypt = () => {
                   },
                 }}
               />
-              <HelperText type="error" visible={hasErrors()}>
+              <HelperText type="error" visible={hasInputErrors()}>
+                {inputError.keyInputError}
+              </HelperText>
+              <HelperText type="error" visible={hasServerErrors()}>
                 {errorMessage.keyInputError}
               </HelperText>
             </View>
@@ -232,7 +286,7 @@ const Encrypt = () => {
             <Button
               dark
               mode="contained"
-              //   disabled={!hasErrors()}
+              //   disabled={!hasInputErrors()}
               onPress={() => {
                 handleSubmit();
                 showDialog();
@@ -247,39 +301,38 @@ const Encrypt = () => {
           </View>
         </View>
         <View>
-          {/* {!hasErrors() && ( */}
-          <Portal>
-            <Dialog
-              visible={visible}
-              onDismiss={hideDialog}
-              style={{
-                backgroundColor: "white",
-              }}
-            >
-              <Dialog.Title>Alert</Dialog.Title>
-              <Dialog.Content>
-                {!showDecrypt ? (
-                  <Text variant="bodyMedium">
-                    Encrypted Cipher Text Is : {DesResult.cipherText}
-                  </Text>
-                ) : (
-                  <Text variant="bodyMedium">
-                    Decrypted Plain Text Is : {DesResult.plainText}
-                  </Text>
-                )}
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button onPress={hideDialog}>Cancel</Button>
-                <Button
-                  onPress={() => setShowDecrypt(true)}
-                  disabled={showDecrypt}
-                >
-                  Decrypt
-                </Button>
-              </Dialog.Actions>
-            </Dialog>
-          </Portal>
-          {/* )} */}
+          {!hasInputErrors() && !hasServerErrors() && (
+            <Portal>
+              <Dialog
+                visible={visible}
+                onDismiss={hideDialog}
+                style={{
+                  backgroundColor: "white",
+                }}
+              >
+                <Dialog.Title>Alert</Dialog.Title>
+                <Dialog.Content>
+                  {!showDecrypt ? (
+                    <Text variant="bodyMedium">
+                      Encrypted Cipher Text Is : {DesResult.cipherText}
+                    </Text>
+                  ) : (
+                    <Text variant="bodyMedium">
+                      Decrypted Plain Text Is : {DesResult.plainText}
+                    </Text>
+                  )}
+                </Dialog.Content>
+                <Dialog.Actions>
+                  <Button onPress={hideDialog}>Cancel</Button>
+                  <Button
+                    onPress={() => setShowDecrypt(!showDecrypt)}
+                  >
+                    {!showDecrypt ? 'Decrypt' : 'Encrypt'}
+                  </Button>
+                </Dialog.Actions>
+              </Dialog>
+            </Portal>
+          )}
         </View>
       </ScrollView>
     </View>

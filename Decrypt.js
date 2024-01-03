@@ -41,7 +41,6 @@ const Decrypt = () => {
   };
 
   const handleSubmit = () => {
-    console.log("==============================");
     if (plainText === "") {
       setErrorMessage((prevState) => ({
         ...prevState,
@@ -66,7 +65,6 @@ const Decrypt = () => {
       }));
     }
     startEncryption();
-    console.log("-------------------------", errorMessage);
   };
   const startEncryption = async () => {
     if (!hasErrors()) {
