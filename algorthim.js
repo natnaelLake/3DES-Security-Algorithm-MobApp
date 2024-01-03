@@ -307,7 +307,6 @@ async function start(plainText, initKey, plainTextCheck, keyCheck) {
     error: "",
   };
   if (plainTextCheck === "plainText" && keyCheck === "plainText") {
-    console.log("+++++++++++++++++++", plainText);
     changedPlainText = textToASCII(plainText);
     changedPlainText = asciiToHex(changedPlainText);
     changedKey = textToASCII(initKey);
@@ -345,7 +344,6 @@ async function start(plainText, initKey, plainTextCheck, keyCheck) {
 
   // Decrypting the cipher text
   if (error.error || error.textError || error.keyError) {
-    console.log("||||||||||||||||||||||||", error);
     return { error };
   } else {
     const decrypted_text = des_3_decrypt(cipher_text, key1, key2, key3);
