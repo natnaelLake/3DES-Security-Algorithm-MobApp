@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "179540455872",
+    "firebase_url": "https://des-algorithm-38ac7-default-rtdb.firebaseio.com",
+    "project_id": "des-algorithm-38ac7",
+    "storage_bucket": "des-algorithm-38ac7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:179540455872:android:74bd9a756c26fe6b5c1825",
+        "android_client_info": {
+          "package_name": "com.des3Agorithm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4Pib2bsQvL8WIyxzkBVLvU1StBKmeFKc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

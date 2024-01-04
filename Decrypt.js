@@ -8,7 +8,8 @@ import {
   RadioButton,
   TextInput,
 } from "react-native-paper";
-import { start } from "./algorthim";
+import {  startDecrypt } from "./algorthim";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Decrypt = () => {
   const [plainText, setPlainText] = useState("123456ABCD132536");
@@ -24,9 +25,14 @@ const Decrypt = () => {
   const [errorMessage, setErrorMessage] = useState({
     plainTextError: "",
     keyInputError: "",
+    error: "",
   });
-  const [visible, setVisible] = React.useState(false);
-  const [showDecrypt, setShowDecrypt] = React.useState(false);
+  const [inputError, setInputError] = useState({
+    plainTextError: "",
+    keyInputError: "",
+  });
+  const [visible, setVisible] = useState(false);
+  const [showDecrypt, setShowDecrypt] = useState(false);
   const hideDialog = () => {
     setVisible(false);
     setShowDecrypt(false);
@@ -36,30 +42,35 @@ const Decrypt = () => {
     setVisible(true);
   };
 
-  const hasErrors = () => {
-    return errorMessage.keyInputError || errorMessage.plainTextError;
+  const hasInputErrors = () => {
+    return inputError.keyInputError || inputError.plainTextError;
   };
-
+  const hasServerErrors = () => {
+    return (
+      errorMessage.keyInputError ||
+      errorMessage.plainTextError ||
+      errorMessage.error
+    );
+  };
   const handleSubmit = () => {
     if (plainText === "") {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         plainTextError: "Please Write Your Message",
       }));
     } else {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         plainTextError: "",
       }));
     }
-
     if (keyInput === "") {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         keyInputError: "Please Add Your Encryption Key",
       }));
     } else {
-      setErrorMessage((prevState) => ({
+      setInputError((prevState) => ({
         ...prevState,
         keyInputError: "",
       }));
@@ -67,14 +78,14 @@ const Decrypt = () => {
     startEncryption();
   };
   const startEncryption = async () => {
-    if (!hasErrors()) {
-      const response = await start(
+    if (!hasInputErrors()) {
+      const response = await startDecrypt(
         plainText,
         keyInput,
         plainTextCheck,
         keyCheck
       );
-      if (!response.error) {
+      if (Object.keys(response).length === 2) {
         setDesResult((prevState) => ({
           ...prevState,
           cipherText: response.encryptedCipherText,
@@ -83,204 +94,248 @@ const Decrypt = () => {
           ...prevState,
           plainText: response.decryptedCipherText,
         }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          plainTextError: "",
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          keyInputError: "",
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          error: "",
+        }));
+      } else if (Object.keys(response).length === 1) {
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          plainTextError: response.error.textError,
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          keyInputError: response.error.keyError,
+        }));
+        setErrorMessage((prevState) => ({
+          ...prevState,
+          error: response.error.error,
+        }));
+      } else {
       }
     }
   };
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.containerStyle}>
-        <View>
+    <SafeAreaView>
+      <View style={styles.container}>
+        <ScrollView style={styles.containerStyle}>
           <View>
             <View>
-              <TextInput
-                label={"Message Input"}
-                error={false}
-                multiline={true}
-                numberOfLines={5}
-                placeholder="Write Message To be Encrypted."
-                value={plainText}
-                underlineColor="#52D2D9"
-                style={{
-                  color: "black",
-                  backgroundColor: "#FEFFFE",
-                  width: "100%",
-                }}
-                onChangeText={(text) => setPlainText(text)}
-                theme={{
-                  colors: {
-                    text: "black",
-                    placeholder: "gray",
-                    // background: "white",
-                  },
-                }}
-              />
-              <HelperText type="error" visible={hasErrors()}>
-                {errorMessage.plainTextError}
-              </HelperText>
-            </View>
-            <View>
-              <Text
-                variant="titleLarge"
-                style={{ marginTop: "10px", marginBottom: "10px" }}
-              >
-                Select The Type of your Message
-              </Text>
-            </View>
-            <View style={styles.radioContainer}>
-              <View style={styles.radioStyle}>
-                <RadioButton
-                  value="plainText"
-                  status={
-                    plainTextCheck === "plainText" ? "checked" : "unchecked"
-                  }
-                  onPress={() => setPlainTextCheck("plainText")}
+              <View>
+                <HelperText type="error" visible={hasServerErrors()}>
+                  {errorMessage.error}
+                </HelperText>
+              </View>
+              <View>
+                <TextInput
+                  label={"Encrypted Message Input"}
+                  error={false}
+                  multiline={true}
+                  numberOfLines={5}
+                  placeholder="Write Your Encrypted Message To be Decrypt."
+                  value={plainText}
+                  underlineColor="#52D2D9"
+                  style={{
+                    color: "black",
+                    backgroundColor: "#FEFFFE",
+                    width: "100%",
+                  }}
+                  onChangeText={(text) => setPlainText(text)}
                   theme={{
                     colors: {
                       text: "black",
+                      placeholder: "gray",
+                      // background: "white",
                     },
                   }}
                 />
-                <Text variant="titleLarge">Plain Text</Text>
-              </View>
-              <View style={styles.radioStyle}>
-                <RadioButton
-                  value="hexaDecimal"
-                  status={
-                    plainTextCheck === "hexaDecimal" ? "checked" : "unchecked"
-                  }
-                  onPress={() => setPlainTextCheck("hexaDecimal")}
-                  labelStyle={{ color: "black" }}
-                  theme={{
-                    colors: {
-                      text: "black",
-                    },
-                  }}
-                />
-                <Text variant="titleLarge">Hexa Decimal</Text>
-              </View>
-            </View>
-          </View>
-          <View>
-            <View>
-              <TextInput
-                label={"Encryption Key"}
-                error={false}
-                multiline={true}
-                numberOfLines={3}
-                placeholder="Write Encryption Key."
-                value={keyInput}
-                underlineColor="#52D2D9"
-                style={{
-                  color: "black",
-                  backgroundColor: "#FEFFFE",
-                  width: "100%",
-                }}
-                onChangeText={(text) => setKeyInput(text)}
-                theme={{
-                  colors: {
-                    text: "black",
-                    placeholder: "gray",
-                    // background: "white",
-                  },
-                }}
-              />
-              <HelperText type="error" visible={hasErrors()}>
-                {errorMessage.keyInputError}
-              </HelperText>
-            </View>
-            <View>
-              <Text
-                variant="titleLarge"
-                style={{ marginTop: "10px", marginBottom: "10px" }}
-              >
-                Select The Type of your Key
-              </Text>
-            </View>
-            <View style={styles.radioContainer}>
-              <View style={styles.radioStyle}>
-                <RadioButton
-                  value="plainText"
-                  status={keyCheck === "plainText" ? "checked" : "unchecked"}
-                  onPress={() => setKeyCheck("plainText")}
-                  theme={{
-                    colors: {
-                      text: "black",
-                    },
-                  }}
-                />
-                <Text variant="titleLarge">Plain Text</Text>
-              </View>
-              <View style={styles.radioStyle}>
-                <RadioButton
-                  value="hexaDecimal"
-                  status={keyCheck === "hexaDecimal" ? "checked" : "unchecked"}
-                  onPress={() => setKeyCheck("hexaDecimal")}
-                  labelStyle={{ color: "black" }}
-                  theme={{
-                    colors: {
-                      text: "black",
-                    },
-                  }}
-                />
-                <Text variant="titleLarge">Hexa Decimal</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.buttonStyle}>
-            <Button
-              dark
-              mode="contained"
-              //   disabled={!hasErrors()}
-              onPress={() => {
-                handleSubmit();
-                showDialog();
-              }}
-              style={{
-                backgroundColor: "#38E54D",
-                width: "150px",
-              }}
-            >
-              Encrypt
-            </Button>
-          </View>
-        </View>
-        <View>
-          {/* {!hasErrors() && ( */}
-          <Portal>
-            <Dialog
-              visible={visible}
-              onDismiss={hideDialog}
-              style={{
-                backgroundColor: "white",
-              }}
-            >
-              <Dialog.Title>Alert</Dialog.Title>
-              <Dialog.Content>
-                {!showDecrypt ? (
-                  <Text variant="bodyMedium">
-                    Encrypted Cipher Text Is : {DesResult.cipherText}
-                  </Text>
+                {inputError.plainTextError ? (
+                  <HelperText type="error" visible={hasInputErrors()}>
+                    {inputError.plainTextError}
+                  </HelperText>
                 ) : (
-                  <Text variant="bodyMedium">
-                    Decrypted Plain Text Is : {DesResult.plainText}
-                  </Text>
+                  <HelperText type="error" visible={hasServerErrors()}>
+                    {errorMessage.plainTextError}
+                  </HelperText>
                 )}
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button onPress={hideDialog}>Cancel</Button>
-                <Button
-                  onPress={() => setShowDecrypt(true)}
-                  disabled={showDecrypt}
+              </View>
+              <View>
+                <Text
+                  variant="titleLarge"
+                  style={{ marginTop: "10px", marginBottom: "10px" }}
                 >
-                  Decrypt
-                </Button>
-              </Dialog.Actions>
-            </Dialog>
-          </Portal>
-          {/* )} */}
-        </View>
-      </ScrollView>
-    </View>
+                  Select The Type of your Message
+                </Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <View style={styles.radioStyle}>
+                  <RadioButton
+                    value="plainText"
+                    status={
+                      plainTextCheck === "plainText" ? "checked" : "unchecked"
+                    }
+                    onPress={() => setPlainTextCheck("plainText")}
+                    theme={{
+                      colors: {
+                        text: "black",
+                      },
+                    }}
+                  />
+                  <Text variant="titleLarge">Plain Text</Text>
+                </View>
+                <View style={styles.radioStyle}>
+                  <RadioButton
+                    value="hexaDecimal"
+                    status={
+                      plainTextCheck === "hexaDecimal" ? "checked" : "unchecked"
+                    }
+                    onPress={() => setPlainTextCheck("hexaDecimal")}
+                    labelStyle={{ color: "black" }}
+                    theme={{
+                      colors: {
+                        text: "black",
+                      },
+                    }}
+                  />
+                  <Text variant="titleLarge">Hexa Decimal</Text>
+                </View>
+              </View>
+            </View>
+            <View>
+              <View>
+                <TextInput
+                  label={"Enter Decryption Key"}
+                  error={false}
+                  multiline={true}
+                  numberOfLines={3}
+                  placeholder="Write Decryption Key."
+                  value={keyInput}
+                  underlineColor="#52D2D9"
+                  style={{
+                    color: "black",
+                    backgroundColor: "#FEFFFE",
+                    width: "100%",
+                  }}
+                  onChangeText={(text) => setKeyInput(text)}
+                  theme={{
+                    colors: {
+                      text: "black",
+                      placeholder: "gray",
+                      // background: "white",
+                    },
+                  }}
+                />
+                {inputError.keyInputError ? (
+                  <HelperText type="error" visible={hasInputErrors()}>
+                    {inputError.keyInputError}
+                  </HelperText>
+                ) : (
+                  <HelperText type="error" visible={hasServerErrors()}>
+                    {errorMessage.keyInputError}
+                  </HelperText>
+                )}
+              </View>
+              <View>
+                <Text
+                  variant="titleLarge"
+                  style={{ marginTop: "10px", marginBottom: "10px" }}
+                >
+                  Select The Type of your Key
+                </Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <View style={styles.radioStyle}>
+                  <RadioButton
+                    value="plainText"
+                    status={keyCheck === "plainText" ? "checked" : "unchecked"}
+                    onPress={() => setKeyCheck("plainText")}
+                    theme={{
+                      colors: {
+                        text: "black",
+                      },
+                    }}
+                  />
+                  <Text variant="titleLarge">Plain Text</Text>
+                </View>
+                <View style={styles.radioStyle}>
+                  <RadioButton
+                    value="hexaDecimal"
+                    status={
+                      keyCheck === "hexaDecimal" ? "checked" : "unchecked"
+                    }
+                    onPress={() => setKeyCheck("hexaDecimal")}
+                    labelStyle={{ color: "black" }}
+                    theme={{
+                      colors: {
+                        text: "black",
+                      },
+                    }}
+                  />
+                  <Text variant="titleLarge">Hexa Decimal</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.buttonStyle}>
+              <Button
+                dark
+                mode="contained"
+                //   disabled={!hasInputErrors()}
+                onPress={() => {
+                  handleSubmit();
+                  showDialog();
+                }}
+                style={{
+                  backgroundColor: "#38E54D",
+                  width: "150px",
+                }}
+              >
+                Decrypt
+              </Button>
+            </View>
+          </View>
+          <View>
+            {!hasInputErrors() && !hasServerErrors() && (
+              <Portal>
+                <Dialog
+                  visible={visible}
+                  onDismiss={hideDialog}
+                  style={{
+                    backgroundColor: "white",
+                  }}
+                >
+                  <Dialog.Title>Alert</Dialog.Title>
+                  <Dialog.Content>
+                    {!showDecrypt ? (
+                      <Text variant="bodyMedium">
+                        Decrypted Plain Text Is : {DesResult.plainText}
+                      </Text>
+                    ) : (
+                      <Text variant="bodyMedium">
+                        Encrypted Cipher Text Is : {DesResult.cipherText}
+                      </Text>
+                    )}
+                  </Dialog.Content>
+                  <Dialog.Actions>
+                    <Button onPress={hideDialog}>Cancel</Button>
+                    <Button onPress={() => setShowDecrypt(!showDecrypt)}>
+                      {showDecrypt ? "Decrypt" : "Encrypt"}
+                    </Button>
+                  </Dialog.Actions>
+                </Dialog>
+              </Portal>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 

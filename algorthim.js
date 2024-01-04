@@ -19,6 +19,7 @@ let key3;
 let changedKey;
 let changedPlainText;
 let cipher_text;
+let decrypted_text;
 function textToASCII(plainText) {
   let asciiString = "";
   for (let i = 0; i < plainText.length; i++) {
@@ -148,7 +149,6 @@ function generate_round_keys(key) {
 function encrypt(plainText, roundKeyBits, hexRoundKey) {
   plainText = hex2bin(plainText);
   plainText = permute(plainText, initial_perm, 64);
-  // console.log("After initial permutation", bin2hex(plainText));
   let left = plainText.slice(0, 32);
   let right = plainText.slice(32, 64);
 
@@ -176,16 +176,6 @@ function encrypt(plainText, roundKeyBits, hexRoundKey) {
     if (i !== 15) {
       [left, right] = [right, left];
     }
-    // console.log(
-    //   "Round ",
-    //   i + 1,
-    //   " ",
-    //   bin2hex(left),
-    //   " ",
-    //   bin2hex(right),
-    //   " ",
-    //   hexRoundKey[i]
-    // );
   }
   const combine = left + right;
   let cipher_text = permute(combine, final_perm, 64);
@@ -196,7 +186,6 @@ function encrypt(plainText, roundKeyBits, hexRoundKey) {
 function decrypt(cipherText, roundKeyBits, hexRoundKey) {
   cipherText = hex2bin(cipherText);
   cipherText = permute(cipherText, initial_perm, 64);
-  // console.log("After initial permutation", bin2hex(cipherText));
   let left = cipherText.slice(0, 32);
   let right = cipherText.slice(32, 64);
   for (let i = 15; i >= 0; i--) {
@@ -225,16 +214,6 @@ function decrypt(cipherText, roundKeyBits, hexRoundKey) {
     if (i !== 0) {
       [left, right] = [right, left];
     }
-    // console.log(
-    //   "Round ",
-    //   16 - i,
-    //   " ",
-    //   bin2hex(left),
-    //   " ",
-    //   bin2hex(right),
-    //   " ",
-    //   hexRoundKey[i]
-    // );
   }
 
   // Combination
@@ -251,16 +230,9 @@ function des_3_encrypt(plainText, key1, key2, key3) {
   const [roundKeyBits2, hexRoundKey2] = generate_round_keys(key2);
   const [roundKeyBits3, hexRoundKey3] = generate_round_keys(key3);
 
-  // console.log("Encryption");
   let cipher_text = encrypt(plainText, roundKeyBits1, hexRoundKey1);
-  // console.log("Intermediate Cipher Text 1 : ", cipher_text);
-
   cipher_text = decrypt(cipher_text, roundKeyBits2, hexRoundKey2);
-  // console.log("Intermediate Cipher Text 2 : ", cipher_text);
-
   cipher_text = encrypt(cipher_text, roundKeyBits3, hexRoundKey3);
-  // console.log("Cipher Text : ", cipher_text);
-
   return cipher_text;
 }
 function des_3_decrypt(cipherText, key1, key2, key3) {
@@ -268,16 +240,9 @@ function des_3_decrypt(cipherText, key1, key2, key3) {
   const [roundKeyBits2, hexRoundKey2] = generate_round_keys(key2);
   const [roundKeyBits3, hexRoundKey3] = generate_round_keys(key3);
 
-  // console.log("Decryption");
   let decrypted_text = decrypt(cipherText, roundKeyBits3, hexRoundKey3);
-  // console.log("Intermediate Decrypted Text 1 : ", decrypted_text);
-
   decrypted_text = encrypt(decrypted_text, roundKeyBits2, hexRoundKey2);
-  // console.log("Intermediate Decrypted Text 2 : ", decrypted_text);
-
   decrypted_text = decrypt(decrypted_text, roundKeyBits1, hexRoundKey1);
-  // console.log("Decrypted Text : ", decrypted_text);
-
   return decrypted_text;
 }
 function isHexLengthOf168(value) {
@@ -300,7 +265,7 @@ function isHexMultipleOf64(value) {
   }
   return false; // Not a hexadecimal
 }
-async function start(plainText, initKey, plainTextCheck, keyCheck) {
+async function startEncrypt(plainText, initKey, plainTextCheck, keyCheck) {
   let error = {
     textError: "",
     keyError: "",
@@ -321,8 +286,9 @@ async function start(plainText, initKey, plainTextCheck, keyCheck) {
     key1 = changedKey.substring(0, 16);
     key2 = changedKey.substring(16, 32);
     key3 = changedKey.substring(32, 48);
-    if (!error.error || !error.textError || !error.keyError) {
+    if (!error.error && !error.textError && !error.keyError) {
       cipher_text = des_3_encrypt(changedPlainText, key1, key2, key3);
+      decrypted_text = des_3_decrypt(cipher_text, key1, key2, key3);
     }
   } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
     if (!isHexLengthOf168(hex2bin(initKey))) {
@@ -335,26 +301,75 @@ async function start(plainText, initKey, plainTextCheck, keyCheck) {
     key1 = initKey.substring(0, 16);
     key2 = initKey.substring(16, 32);
     key3 = initKey.substring(32, 48);
-    if (!error.error || !error.textError || !error.keyError) {
+    if (!error.error && !error.textError && !error.keyError) {
       cipher_text = des_3_encrypt(plainText, key1, key2, key3);
+      decrypted_text = des_3_decrypt(cipher_text, key1, key2, key3);
     }
   } else {
     error.error = "Make The Inputs The Same Data Type.";
   }
-
-  // Decrypting the cipher text
   if (error.error || error.textError || error.keyError) {
     return { error };
   } else {
-    const decrypted_text = des_3_decrypt(cipher_text, key1, key2, key3);
     return {
       encryptedCipherText: cipher_text,
       decryptedCipherText: decrypted_text,
     };
   }
 }
-// start(plainText, checkNotHex, initKey);
-
+async function startDecrypt(plainText, initKey, plainTextCheck, keyCheck) {
+  let error = {
+    textError: "",
+    keyError: "",
+    error: "",
+  };
+  if (plainTextCheck === "plainText" && keyCheck === "plainText") {
+    changedPlainText = textToASCII(plainText);
+    changedPlainText = asciiToHex(changedPlainText);
+    changedKey = textToASCII(initKey);
+    changedKey = asciiToHex(initKey);
+    if (!isHexLengthOf168(hex2bin(changedKey))) {
+      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    }
+    if (!isHexMultipleOf64(hex2bin(changedPlainText))) {
+      error.textError =
+        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+    }
+    key1 = changedKey.substring(0, 16);
+    key2 = changedKey.substring(16, 32);
+    key3 = changedKey.substring(32, 48);
+    if (!error.error && !error.textError && !error.keyError) {
+      decrypted_text = des_3_decrypt(changedPlainText, key1, key2, key3);
+      cipher_text = des_3_encrypt(decrypted_text, key1, key2, key3);
+    }
+  } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
+    if (!isHexLengthOf168(hex2bin(initKey))) {
+      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    }
+    if (!isHexMultipleOf64(hex2bin(plainText))) {
+      error.textError =
+        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+    }
+    key1 = initKey.substring(0, 16);
+    key2 = initKey.substring(16, 32);
+    key3 = initKey.substring(32, 48);
+    if (!error.error && !error.textError && !error.keyError) {
+      decrypted_text = des_3_decrypt(plainText, key1, key2, key3);
+      cipher_text = des_3_encrypt(decrypted_text, key1, key2, key3);
+    }
+  } else {
+    error.error = "Make The Inputs The Same Data Type.";
+  }
+  if (error.error || error.textError || error.keyError) {
+    return { error };
+  } else {
+    return {
+      encryptedCipherText: cipher_text,
+      decryptedCipherText: decrypted_text,
+    };
+  }
+}
 module.exports = {
-  start,
+  startEncrypt,
+  startDecrypt
 };
