@@ -249,21 +249,22 @@ function isHexLengthOf168(value) {
   const hexRegex = /^[0-9A-Fa-f]+$/;
   const isHex = hexRegex.test(value);
   if (isHex && value.length === 192) {
-    return true; // Length must be greater than 64 for value
+    return { checkValue: true, length: value.length }; // Length must be greater than 64 for value
   }
-  return false; // Not a hexadecimal
+  return { checkValue: false, length: value.length }; // Not a hexadecimal
 }
 function isHexMultipleOf64(value) {
   // Check if it's a hexadecimal
+  console.log("----------------", value.length);
   const hexRegex = /^[0-9A-Fa-f]+$/;
   const isHex = hexRegex.test(value);
 
   if (isHex && value.length >= 64) {
     if (value.length % 64 === 0) {
-      return true; // Length must be greater than 64 for value
+      return { checkValue: true, length: value.length }; // Length must be greater than 64 for value
     }
   }
-  return false; // Not a hexadecimal
+  return { checkValue: false, length: value.length }; // Not a hexadecimal
 }
 async function startEncrypt(plainText, initKey, plainTextCheck, keyCheck) {
   let error = {
@@ -276,12 +277,14 @@ async function startEncrypt(plainText, initKey, plainTextCheck, keyCheck) {
     changedPlainText = asciiToHex(changedPlainText);
     changedKey = textToASCII(initKey);
     changedKey = asciiToHex(initKey);
-    if (!isHexLengthOf168(hex2bin(changedKey))) {
-      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    const lengthValue = isHexLengthOf168(hex2bin(changedKey));
+    const textReturnValue = isHexMultipleOf64(hex2bin(changedPlainText));
+    if (!lengthValue.checkValue) {
+      error.keyError = "Your Key is " + lengthValue.length + "/64 bits length";
     }
-    if (!isHexMultipleOf64(hex2bin(changedPlainText))) {
+    if (!textReturnValue.checkValue) {
       error.textError =
-        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+        "Your Message is " + textReturnValue.length + "/128 bits length";
     }
     key1 = changedKey.substring(0, 16);
     key2 = changedKey.substring(16, 32);
@@ -291,12 +294,14 @@ async function startEncrypt(plainText, initKey, plainTextCheck, keyCheck) {
       decrypted_text = des_3_decrypt(cipher_text, key1, key2, key3);
     }
   } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
-    if (!isHexLengthOf168(hex2bin(initKey))) {
-      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    const lengthValue = isHexLengthOf168(hex2bin(initKey));
+    const textReturnValue = isHexMultipleOf64(hex2bin(plainText));
+    if (!lengthValue.checkValue) {
+      error.keyError = "Your Key is " + lengthValue.length + "/64 bits length";
     }
-    if (!isHexMultipleOf64(hex2bin(plainText))) {
+    if (!textReturnValue.checkValue) {
       error.textError =
-        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+        "Your Message is " + textReturnValue.length + "/128 bits length";
     }
     key1 = initKey.substring(0, 16);
     key2 = initKey.substring(16, 32);
@@ -328,12 +333,14 @@ async function startDecrypt(plainText, initKey, plainTextCheck, keyCheck) {
     changedPlainText = asciiToHex(changedPlainText);
     changedKey = textToASCII(initKey);
     changedKey = asciiToHex(initKey);
-    if (!isHexLengthOf168(hex2bin(changedKey))) {
-      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    const lengthValue = isHexLengthOf168(hex2bin(changedKey));
+    const textReturnValue = isHexMultipleOf64(hex2bin(changedPlainText));
+    if (!lengthValue.checkValue) {
+      error.keyError = "Your Key is " + lengthValue.length + "/128 bits length";
     }
-    if (!isHexMultipleOf64(hex2bin(changedPlainText))) {
+    if (!textReturnValue.checkValue) {
       error.textError =
-        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+        "Your Message is " + textReturnValue.length + "/128 bits length";
     }
     key1 = changedKey.substring(0, 16);
     key2 = changedKey.substring(16, 32);
@@ -343,12 +350,14 @@ async function startDecrypt(plainText, initKey, plainTextCheck, keyCheck) {
       cipher_text = des_3_encrypt(decrypted_text, key1, key2, key3);
     }
   } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
-    if (!isHexLengthOf168(hex2bin(initKey))) {
-      error.keyError = "It is not Hex decimal or Length is not 48 Chars";
+    const lengthValue = isHexLengthOf168(hex2bin(initKey));
+    const textReturnValue = isHexMultipleOf64(hex2bin(plainText));
+    if (!lengthValue.checkValue) {
+      error.keyError = "Your Key is " + lengthValue.length + "/128 bits length";
     }
-    if (!isHexMultipleOf64(hex2bin(plainText))) {
+    if (!textReturnValue.checkValue) {
       error.textError =
-        "It is not Hex decimal or It is not a Multiple of  16 Chars";
+        "Your Message is " + textReturnValue.length + "/128 bits length";
     }
     key1 = initKey.substring(0, 16);
     key2 = initKey.substring(16, 32);
@@ -371,5 +380,5 @@ async function startDecrypt(plainText, initKey, plainTextCheck, keyCheck) {
 }
 module.exports = {
   startEncrypt,
-  startDecrypt
+  startDecrypt,
 };

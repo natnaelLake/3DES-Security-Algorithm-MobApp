@@ -78,7 +78,6 @@ const Decrypt = () => {
     startEncryption();
   };
   const startEncryption = async () => {
-    if (!hasInputErrors()) {
       const response = await startDecrypt(
         plainText,
         keyInput,
@@ -119,9 +118,7 @@ const Decrypt = () => {
           ...prevState,
           error: response.error.error,
         }));
-      } else {
       }
-    }
   };
   return (
     <SafeAreaView>

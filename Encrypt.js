@@ -78,7 +78,6 @@ const Encrypt = () => {
     startEncryption();
   };
   const startEncryption = async () => {
-    if (!hasInputErrors()) {
       const response = await startEncrypt(
         plainText,
         keyInput,
@@ -119,17 +118,7 @@ const Encrypt = () => {
           ...prevState,
           error: response.error.error,
         }));
-        // setDesResult((prevState) => ({
-        //   ...prevState,
-        //   cipherText: '',
-        // }));
-        // setDesResult((prevState) => ({
-        //   ...prevState,
-        //   plainText: '',
-        // }));
-      } else {
-      }
-    }
+      } 
   };
   return (
     <SafeAreaView>
@@ -156,7 +145,7 @@ const Encrypt = () => {
                     backgroundColor: "#FEFFFE",
                     width: "100%",
                   }}
-                  onChangeText={(text) => setPlainText(text)}
+                  onChange={(text) => setPlainText(text.target.value)}
                   theme={{
                     colors: {
                       text: "black",
@@ -169,7 +158,7 @@ const Encrypt = () => {
                   {inputError.plainTextError}
                 </HelperText>
                 <HelperText type="error" visible={hasServerErrors()}>
-                  {errorMessage.plainTextError}
+                  {!inputError.plainTextError && errorMessage.plainTextError}
                 </HelperText>
               </View>
               <View>
@@ -242,7 +231,7 @@ const Encrypt = () => {
                   {inputError.keyInputError}
                 </HelperText>
                 <HelperText type="error" visible={hasServerErrors()}>
-                  {errorMessage.keyInputError}
+                  {!inputError.keyInputError && errorMessage.keyInputError}
                 </HelperText>
               </View>
               <View>
@@ -289,7 +278,6 @@ const Encrypt = () => {
               <Button
                 dark
                 mode="contained"
-                //   disabled={!hasInputErrors()}
                 onPress={() => {
                   handleSubmit();
                   showDialog();
