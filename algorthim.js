@@ -293,13 +293,8 @@ async function startEncrypt(
   plainTextCheck = "plainText",
   keyCheck = "plainText"
 ) {
-  let error = {
-    textError: "",
-    keyError: "",
-    error: "",
-  };
   if (plainTextCheck !== keyCheck) {
-    error.error = "Make The Inputs The Same Data Type.";
+    return { error: "Make The Inputs The Same Data Type." };
   }
   if (plainTextCheck === "plainText" && keyCheck === "plainText") {
     changedPlainText = textToASCII(plainText);
@@ -330,7 +325,7 @@ async function startEncrypt(
     if (isPadding) {
       decrypted_text = removePadding(decrypted_text);
     }
-    console.log("...............", cipher_text,decrypted_text);
+    console.log("...............", cipher_text, decrypted_text);
   } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
     key1 = initKey.substring(0, 16);
     key2 = initKey.substring(16, 32);
@@ -356,6 +351,7 @@ async function startEncrypt(
     decrypted_text = decryptedBlocks.join("");
     if (isPadding) {
       decrypted_text = removePadding(decrypted_text);
+      isPadding = false;
     }
     console.log(decrypted_text);
     console.log("::::::::::::::::::", cipher_text, decrypted_text);
@@ -366,66 +362,70 @@ async function startEncrypt(
   };
 }
 async function startDecrypt(plainText, initKey, plainTextCheck, keyCheck) {
-  let error = {
-    textError: "",
-    keyError: "",
-    error: "",
-  };
   if (plainTextCheck !== keyCheck) {
-    error.error = "Make The Inputs The Same Data Type.";
+    return { error: "Make The Inputs The Same Data Type." };
   }
   if (plainTextCheck === "plainText" && keyCheck === "plainText") {
     changedPlainText = textToASCII(plainText);
     changedPlainText = asciiToHex(changedPlainText);
     changedKey = textToASCII(initKey);
     changedKey = asciiToHex(initKey);
-    const lengthValue = isHexLengthOf168(hex2bin(changedKey));
-    const textReturnValue = isHexMultipleOf64(hex2bin(changedPlainText));
-    if (!lengthValue.checkValue) {
-      error.keyError = "Your Key is " + lengthValue.length + "/128 bits length";
-    }
-    if (!textReturnValue.checkValue) {
-      error.textError =
-        "Your Message is " + textReturnValue.length + "/128 bits length";
-    }
     key1 = changedKey.substring(0, 16);
     key2 = changedKey.substring(16, 32);
     key3 = changedKey.substring(32, 48);
-    if (!error.error && !error.textError && !error.keyError) {
-      decrypted_text = des_3_decrypt(changedPlainText, key1, key2, key3);
-      cipher_text = des_3_encrypt(decrypted_text, key1, key2, key3);
-    }
+    console.log("+++++++++++++++++++", changedPlainText);
+    const blocks = splitIntoBlocks(hex2bin(changedPlainText));
+    console.log("+++++--------------", blocks);
+    const encryptedBlocks = blocks.map((block) => {
+      if (block.length === 64) {
+        return des_3_decrypt(bin2hex(block), key1, key2, key3);
+      }
+    });
+    const decryptedBlocks = encryptedBlocks.map((block) => {
+      return des_3_encrypt(block, key1, key2, key3);
+    });
+
+    cipher_text = encryptedBlocks.join("");
+    decrypted_text = decryptedBlocks.join("");
+    console.log("...............", cipher_text, decrypted_text);
   } else if (plainTextCheck === "hexaDecimal" && keyCheck === "hexaDecimal") {
-    const lengthValue = isHexLengthOf168(hex2bin(initKey));
-    const textReturnValue = isHexMultipleOf64(hex2bin(plainText));
-    if (!lengthValue.checkValue) {
-      error.keyError = "Your Key is " + lengthValue.length + "/128 bits length";
-    }
-    if (!textReturnValue.checkValue) {
-      error.textError =
-        "Your Message is " + textReturnValue.length + "/128 bits length";
-    }
     key1 = initKey.substring(0, 16);
     key2 = initKey.substring(16, 32);
     key3 = initKey.substring(32, 48);
-    if (!error.error && !error.textError && !error.keyError) {
-      decrypted_text = des_3_decrypt(plainText, key1, key2, key3);
-      cipher_text = des_3_encrypt(decrypted_text, key1, key2, key3);
+    const blocks = splitIntoBlocks(hex2bin(plainText));
+    console.log("+++++--------------", blocks);
+    const decryptedBlocks = blocks.map((block) => {
+      if (block.length === 64) {
+        return des_3_decrypt(bin2hex(block), key1, key2, key3);
+      } else {
+        block = addPadding(block);
+        console.log("&&&&&&", block);
+        isPadding = true;
+        return des_3_decrypt(bin2hex(block), key1, key2, key3);
+      }
+    });
+    const encryptedBlocks = decryptedBlocks.map((block) => {
+      return des_3_encrypt(block, key1, key2, key3);
+    });
+
+    console.log("...............", decryptedBlocks);
+    cipher_text = encryptedBlocks.join("");
+    decrypted_text = decryptedBlocks.join("");
+    if (isPadding) {
+      decrypted_text = removePadding(cipher_text);
     }
+    console.log(decrypted_text);
+    console.log("::::::::::::::::::", cipher_text, decrypted_text);
   }
-  if (error.error || error.textError || error.keyError) {
-    return { error };
-  } else {
-    return {
-      encryptedCipherText: cipher_text,
-      decryptedCipherText: decrypted_text,
-    };
-  }
+  return {
+    encryptedCipherText: cipher_text,
+    decryptedCipherText: decrypted_text,
+  };
 }
-startEncrypt(
-  "123456ABCD1325362536BCD1325362536BCD6BCD6BCD6BC",
-  "AABB09182736CCDDCCDDEE33446688FF1023456789ABCDEF"
-);
+// startEncrypt(
+//   "123456ABCD1325362536BCD1325362536BCD6BCD6BCD6BC",
+//   "AABB09182736CCDDCCDDEE33446688FF1023456789ABCDEF"
+// );
 module.exports = {
   startEncrypt,
   startDecrypt,

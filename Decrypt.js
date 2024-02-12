@@ -106,18 +106,7 @@ const Decrypt = () => {
           error: "",
         }));
       } else if (Object.keys(response).length === 1) {
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          plainTextError: response.error.textError,
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          keyInputError: response.error.keyError,
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          error: response.error.error,
-        }));
+        setErrorMessage( response.error);
       }
   };
   return (

@@ -22,11 +22,7 @@ const Encrypt = () => {
     cipherText: "",
     plainText: "",
   });
-  const [errorMessage, setErrorMessage] = useState({
-    plainTextError: "",
-    keyInputError: "",
-    error: "",
-  });
+  const [errorMessage, setErrorMessage] = useState('');
   const [inputError, setInputError] = useState({
     plainTextError: "",
     keyInputError: "",
@@ -47,9 +43,7 @@ const Encrypt = () => {
   };
   const hasServerErrors = () => {
     return (
-      errorMessage.keyInputError ||
-      errorMessage.plainTextError ||
-      errorMessage.error
+      errorMessage
     );
   };
   const handleSubmit = () => {
@@ -84,6 +78,7 @@ const Encrypt = () => {
         plainTextCheck,
         keyCheck
       );
+      console.log('Object.keys(response)',response)
       if (Object.keys(response).length === 2) {
         setDesResult((prevState) => ({
           ...prevState,
@@ -93,31 +88,9 @@ const Encrypt = () => {
           ...prevState,
           plainText: response.decryptedCipherText,
         }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          plainTextError: "",
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          keyInputError: "",
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          error: "",
-        }));
+        setErrorMessage("");
       } else if (Object.keys(response).length === 1) {
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          plainTextError: response.error.textError,
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          keyInputError: response.error.keyError,
-        }));
-        setErrorMessage((prevState) => ({
-          ...prevState,
-          error: response.error.error,
-        }));
+        setErrorMessage(response.error);
       } 
   };
   return (
@@ -128,7 +101,7 @@ const Encrypt = () => {
             <View>
               <View>
                 <HelperText type="error" visible={hasServerErrors()}>
-                  {errorMessage.error}
+                  {errorMessage}
                 </HelperText>
               </View>
               <View>
@@ -156,9 +129,6 @@ const Encrypt = () => {
                 />
                 <HelperText type="error" visible={hasInputErrors()}>
                   {inputError.plainTextError}
-                </HelperText>
-                <HelperText type="error" visible={hasServerErrors()}>
-                  {!inputError.plainTextError && errorMessage.plainTextError}
                 </HelperText>
               </View>
               <View>
@@ -229,9 +199,6 @@ const Encrypt = () => {
                 />
                 <HelperText type="error" visible={hasInputErrors()}>
                   {inputError.keyInputError}
-                </HelperText>
-                <HelperText type="error" visible={hasServerErrors()}>
-                  {!inputError.keyInputError && errorMessage.keyInputError}
                 </HelperText>
               </View>
               <View>
