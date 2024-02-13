@@ -1,10 +1,7 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import TripleDES from "./TripleDESComponent";
-import { BottomNavigation, Provider } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import {  Provider } from "react-native-paper";
 import Decrypt from "./Decrypt";
 import Encrypt from "./Encrypt";
-import { useState } from "react";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NavigationContainer } from "@react-navigation/native";
